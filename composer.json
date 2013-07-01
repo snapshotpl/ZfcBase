@@ -26,7 +26,8 @@
         "zendframework/zend-modulemanager": "~2.1",
         "zendframework/zend-mvc": "~2.1",
         "zendframework/zend-servicemanager": "~2.1",
-        "zendframework/zend-stdlib": "~2.1"
+        "zendframework/zend-stdlib": "~2.1",
+        "zendframework/zend-paginator": "~2.1"
     },
     "autoload": {
         "psr-0": {
