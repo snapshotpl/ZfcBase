@@ -8,6 +8,7 @@ use Zend\Db\ResultSet\HydratingResultSet;
 use Zend\Db\Sql\Select;
 use Zend\Db\Sql\Sql;
 use Zend\Db\Sql\TableIdentifier;
+use Zend\Paginator\Adapter\DbSelect;
 use Zend\Stdlib\Hydrator\HydratorInterface;
 use Zend\Stdlib\Hydrator\ClassMethods;
 use ZfcBase\EventManager\EventProvider;
@@ -108,12 +109,9 @@ abstract class AbstractDbMapper extends EventProvider
      */
     protected function select(Select $select, $entityPrototype = null, HydratorInterface $hydrator = null)
     {
-        $this->initialize();
-
         $stmt = $this->getSlaveSql()->prepareStatementForSqlObject($select);
 
-        $resultSet = new HydratingResultSet($hydrator ?: $this->getHydrator(),
-            $entityPrototype ?: $this->getEntityPrototype());
+        $resultSet = $this->getResultSetPrototype($entityPrototype, $hydrator);
 
         $resultSet->initialize($stmt->execute());
         return $resultSet;
@@ -335,5 +333,32 @@ abstract class AbstractDbMapper extends EventProvider
             return $hydrator->extract($entity);
         }
         throw new Exception\InvalidArgumentException('Entity passed to db mapper should be an array or object.');
+    }
+
+    /**
+     * @param object|null $entityPrototype
+     * @param HydratorInterface|null $hydrator
+     * @return HydratingResultSet
+     */
+    public function getResultSetPrototype($entityPrototype = null, HydratorInterface $hydrator = null)
+    {
+        $this->initialize();
+
+        $resultSet = new HydratingResultSet($hydrator ?: $this->getHydrator(),
+            $entityPrototype ?: $this->getEntityPrototype());
+
+        return $resultSet;
+    }
+
+    /**
+     * @param \Zend\Db\Sql\Select $select
+     * @return \Zend\Paginator\Adapter\DbSelect
+     */
+    protected function getPaginatorAdapter(Select $select)
+    {
+        $adapter = $this->getDbAdapter();
+        $resultSet = $this->getResultSetPrototype();
+
+        return new DbSelect($select, $adapter, $resultSet);
     }
 }
